@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
 const AUTH_TOKEN_KEY = "sap_auth_token";
 
 export function getStoredAuthToken(): string | null {
