@@ -25,6 +25,17 @@ a {
   align-items: center;
 }
 
+.app-nav__user {
+  color: #cbd5e1;
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+.app-nav__logout {
+  min-height: 30px;
+  padding: 4px 10px;
+}
+
 .app-nav__link {
   text-decoration: none;
   color: #e5e7eb;
@@ -328,6 +339,15 @@ pre {
 .empty-state p {
   margin: 0;
   color: #64748b;
+}
+
+.auth-card {
+  max-width: 460px;
+}
+
+.auth-form {
+  display: grid;
+  gap: 10px;
 }
 
 .review-table-wrap {

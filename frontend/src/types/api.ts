@@ -1,5 +1,6 @@
 export type VerificationStatus = "pending" | "verified" | "rejected" | "needs_revision";
 export type KnowledgeItemType = "table_mention" | "field_mention" | "relationship_hint";
+export type UserRole = "admin" | "reviewer";
 
 export interface FileImportResult {
   file_index: number;
@@ -57,6 +58,37 @@ export interface ReviewActionRequest {
   source_table?: string;
   target_table?: string;
   join_field?: string;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  role: UserRole;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface AuthLoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface AuthLoginResponse {
+  access_token: string;
+  token_type: "bearer";
+  user: User;
+}
+
+export interface UserCreateRequest {
+  username: string;
+  password: string;
+  role: UserRole;
+  is_active: boolean;
+}
+
+export interface UserUpdateRequest {
+  role?: UserRole;
+  is_active?: boolean;
 }
 
 export function formatConfidence(value: number | null): string {

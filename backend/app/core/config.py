@@ -5,6 +5,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "SAP Knowledge Tool API"
     database_url: str = "sqlite:///./sap_knowledge.db"
+    auth_secret_key: str = "change-me-in-production"
+    auth_algorithm: str = "HS256"
+    bootstrap_admin_username: str = "admin"
+    bootstrap_admin_password: str = "admin123"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

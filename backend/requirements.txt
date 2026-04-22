@@ -7,3 +7,6 @@ python-multipart
 python-docx
 openpyxl
 pypdf
+passlib[bcrypt]
+bcrypt==4.3.0
+python-jose[cryptography]
