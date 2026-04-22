@@ -9,12 +9,15 @@ export interface FileImportResult {
   message: string;
   /** Present on failed rows when import was requested with per-file debug (include_results). */
   stage?: string;
+  duplicates_skipped?: number;
+  duplicates_enriched?: number;
 }
 
 export interface FilesImportResponse {
   documents_processed: number;
   knowledge_items_created: number;
   duplicates_skipped: number;
+  duplicates_enriched?: number;
   failed_files: number;
   results?: FileImportResult[] | null;
 }

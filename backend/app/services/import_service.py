@@ -113,7 +113,7 @@ def _create_document_record(
     raise RuntimeError("Could not allocate unique document code.")
 
 
-def import_folder(db: Session, folder_path: str, imported_by: str | None) -> tuple[int, int, int, int]:
+def import_folder(db: Session, folder_path: str, imported_by: str | None) -> tuple[int, int, int, int, int]:
     base = Path(folder_path)
     if not base.exists() or not base.is_dir():
         raise ValueError("Folder path is invalid.")
@@ -121,6 +121,7 @@ def import_folder(db: Session, folder_path: str, imported_by: str | None) -> tup
     documents_processed = 0
     knowledge_items_created = 0
     duplicates_skipped = 0
+    duplicates_enriched = 0
     failed_files = 0
 
     for file_path in base.iterdir():
@@ -128,12 +129,13 @@ def import_folder(db: Session, folder_path: str, imported_by: str | None) -> tup
             continue
 
         try:
-            created_count, duplicates_count = _process_file_path(
+            created_count, duplicates_count, enriched_count = _process_file_path(
                 db=db, file_path=str(file_path), file_type=file_path.suffix.lower().replace(".", ""), imported_by=imported_by
             )
             documents_processed += 1
             knowledge_items_created += created_count
             duplicates_skipped += duplicates_count
+            duplicates_enriched += enriched_count
         except Exception:
             failed_files += 1
             logger.exception("Folder import failed for one file.")
@@ -144,15 +146,15 @@ def import_folder(db: Session, folder_path: str, imported_by: str | None) -> tup
         knowledge_items_created,
         failed_files,
     )
-    return documents_processed, knowledge_items_created, duplicates_skipped, failed_files
+    return documents_processed, knowledge_items_created, duplicates_skipped, duplicates_enriched, failed_files
 
 
-def _process_file_path(db: Session, file_path: str, file_type: str, imported_by: str | None) -> tuple[int, int]:
+def _process_file_path(db: Session, file_path: str, file_type: str, imported_by: str | None) -> tuple[int, int, int]:
     parser = get_parser(file_type)
     parsed = parser.parse(file_path)
     document = _create_document_record(db, file_type=file_type, imported_by=imported_by)
-    created, duplicates_skipped = create_knowledge_items_from_candidates(db, document.id, parsed.candidates)
-    return len(created), duplicates_skipped
+    created, duplicates_skipped, duplicates_enriched = create_knowledge_items_from_candidates(db, document.id, parsed.candidates)
+    return len(created), duplicates_skipped, duplicates_enriched
 
 
 def _process_file_bytes(
@@ -162,7 +164,7 @@ def _process_file_bytes(
     imported_by: str | None,
     *,
     stage_ctx: ImportStageContext | None = None,
-) -> tuple[int, int]:
+) -> tuple[int, int, int]:
     """Batch upload path: parse entirely in memory (no temp files). Avoids Windows temp-file issues."""
     debug_docx = file_type.lower() == "docx"
     parser = get_parser(file_type)
@@ -190,10 +192,10 @@ def _process_file_bytes(
     document = _create_document_record(
         db, file_type=file_type, imported_by=imported_by, debug_docx=debug_docx, stage_ctx=stage_ctx
     )
-    created, duplicates_skipped = create_knowledge_items_from_candidates(
+    created, duplicates_skipped, duplicates_enriched = create_knowledge_items_from_candidates(
         db, document.id, parsed.candidates, debug_docx=debug_docx, stage_ctx=stage_ctx
     )
-    return len(created), duplicates_skipped
+    return len(created), duplicates_skipped, duplicates_enriched
 
 
 def import_uploaded_files(
@@ -202,17 +204,18 @@ def import_uploaded_files(
     imported_by: str | None,
     *,
     include_result_stages: bool = False,
-) -> tuple[int, int, int, int, list[dict[str, str | int]]]:
+) -> tuple[int, int, int, int, int, list[dict[str, str | int]]]:
     documents_processed = 0
     knowledge_items_created = 0
     duplicates_skipped = 0
+    duplicates_enriched = 0
     failed_files = 0
     results: list[dict[str, str | int]] = []
 
     for file_index, file_type, file_bytes in uploaded_files:
         stage_ctx = ImportStageContext()
         try:
-            created_count, duplicates_count = _process_file_bytes(
+            created_count, duplicates_count, enriched_count = _process_file_bytes(
                 db=db,
                 file_bytes=file_bytes,
                 file_type=file_type,
@@ -222,11 +225,14 @@ def import_uploaded_files(
             documents_processed += 1
             knowledge_items_created += created_count
             duplicates_skipped += duplicates_count
+            duplicates_enriched += enriched_count
             row: dict[str, str | int] = {
                 "file_index": file_index,
                 "file_type": file_type,
                 "status": "processed",
                 "message": "File processed successfully",
+                "duplicates_skipped": duplicates_count,
+                "duplicates_enriched": enriched_count,
             }
             results.append(row)
         except Exception as exc:
@@ -256,4 +262,4 @@ def import_uploaded_files(
         knowledge_items_created,
         failed_files,
     )
-    return documents_processed, knowledge_items_created, duplicates_skipped, failed_files, results
+    return documents_processed, knowledge_items_created, duplicates_skipped, duplicates_enriched, failed_files, results

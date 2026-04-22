@@ -22,6 +22,7 @@ SAP_MODULES: tuple[str, ...] = (
     "PM",
     "QM",
     "Basis",
+    "PS",
     "Cross-Module",
 )
 
@@ -44,6 +45,7 @@ SAP_ONLY_LOOKUP_URLS: tuple[str, ...] = (
 )
 
 MODULE_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\bcross[-\s]?module\b", re.IGNORECASE), "Cross-Module"),
     (re.compile(r"\bmaterials?\s+management\b", re.IGNORECASE), "MM"),
     (re.compile(r"\bsales\s+and\s+distribution\b", re.IGNORECASE), "SD"),
     (re.compile(r"\bfinancial\s+accounting\b", re.IGNORECASE), "FI"),
@@ -51,9 +53,10 @@ MODULE_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\bproduction\s+planning\b", re.IGNORECASE), "PP"),
     (re.compile(r"\bwarehouse\s+management\b", re.IGNORECASE), "WM"),
     (re.compile(r"\bextended\s+warehouse\s+management\b", re.IGNORECASE), "EWM"),
-    (re.compile(r"\bhuman\s+capital\s+management\b", re.IGNORECASE), "HCM"),
+    (re.compile(r"\bhuman\s+resources\b|\bhuman\s+capital\s+management\b|\bhr\b", re.IGNORECASE), "HCM"),
     (re.compile(r"\bplant\s+maintenance\b", re.IGNORECASE), "PM"),
     (re.compile(r"\bquality\s+management\b", re.IGNORECASE), "QM"),
+    (re.compile(r"\bproject\s+system\b", re.IGNORECASE), "PS"),
     (re.compile(r"\bbasis\b", re.IGNORECASE), "Basis"),
 )
 

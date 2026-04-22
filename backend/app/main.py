@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.deps.auth import require_reviewer_or_admin
@@ -18,11 +18,28 @@ app = FastAPI(title="SAP Knowledge Tool API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://sapknowledgedb.netlify.app"],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1):51\d{2}",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def import_files_request_logger(request: Request, call_next):
+    if request.method.upper() == "POST" and request.url.path == "/api/import/files":
+        auth_present = bool(request.headers.get("authorization"))
+        content_type = request.headers.get("content-type", "")
+        content_length = request.headers.get("content-length", "unknown")
+        print(
+            "DEBUG: import POST received "
+            f"path={request.url.path} auth_present={auth_present} "
+            f"content_type={content_type} content_length={content_length}",
+            flush=True,
+        )
+    response = await call_next(request)
+    return response
 
 @app.on_event("startup")
 def on_startup() -> None:

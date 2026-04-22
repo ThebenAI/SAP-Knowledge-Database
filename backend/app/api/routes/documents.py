@@ -51,7 +51,7 @@ async def upload_document(
 
     parser = get_parser(document.file_type)
     parsed = parser.parse(document.storage_path)
-    created_items = create_knowledge_items_from_candidates(db, document.id, parsed.candidates)
+    created_items, _, _ = create_knowledge_items_from_candidates(db, document.id, parsed.candidates)
 
     return UploadResponse(
         document_id=document.id,

@@ -18,6 +18,15 @@ export function FolderImportForm({ onImport, isSubmitting }: FolderImportFormPro
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (supportedFiles.length === 0) return;
+    if (import.meta.env.DEV) {
+      console.info("[upload-debug] selected supported files", supportedFiles.map((file) => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        isFile: file instanceof File,
+        relativePath: (file as File & { webkitRelativePath?: string }).webkitRelativePath || "",
+      })));
+    }
     await onImport({
       files: supportedFiles,
       imported_by: importedBy.trim() || undefined,

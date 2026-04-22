@@ -18,7 +18,7 @@ router = APIRouter(prefix="/import", tags=["import"])
 @router.post("/folder", response_model=FolderImportResponse, deprecated=True)
 def import_folder_endpoint(payload: FolderImportRequest, db: Session = Depends(get_db)) -> FolderImportResponse:
     try:
-        documents_processed, knowledge_items_created, duplicates_skipped, failed_files = import_folder(
+        documents_processed, knowledge_items_created, duplicates_skipped, duplicates_enriched, failed_files = import_folder(
             db=db, folder_path=payload.folder_path, imported_by=payload.imported_by
         )
     except ValueError:
@@ -32,6 +32,7 @@ def import_folder_endpoint(payload: FolderImportRequest, db: Session = Depends(g
         documents_processed=documents_processed,
         knowledge_items_created=knowledge_items_created,
         duplicates_skipped=duplicates_skipped,
+        duplicates_enriched=duplicates_enriched,
         failed_files=failed_files,
     )
 
@@ -94,6 +95,7 @@ async def import_files_endpoint(
             documents_processed=0,
             knowledge_items_created=0,
             duplicates_skipped=0,
+            duplicates_enriched=0,
             failed_files=failed_files,
             results=results if include_results else None,
         )
@@ -102,7 +104,14 @@ async def import_files_endpoint(
         print(f"DEBUG: DOCX before import_uploaded_files (payload_count={len(payloads)})", flush=True)
 
     try:
-        documents_processed, knowledge_items_created, duplicates_skipped, service_failed, service_results = import_uploaded_files(
+        (
+            documents_processed,
+            knowledge_items_created,
+            duplicates_skipped,
+            duplicates_enriched,
+            service_failed,
+            service_results,
+        ) = import_uploaded_files(
             db=db,
             uploaded_files=payloads,
             imported_by=imported_by,
@@ -121,6 +130,7 @@ async def import_files_endpoint(
         documents_processed=documents_processed,
         knowledge_items_created=knowledge_items_created,
         duplicates_skipped=duplicates_skipped,
+        duplicates_enriched=duplicates_enriched,
         failed_files=failed_files + service_failed,
         results=(results + service_results) if include_results else None,
     )

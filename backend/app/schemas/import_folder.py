@@ -14,11 +14,14 @@ class FileImportResult(BaseModel):
     status: str
     message: str
     stage: str | None = None
+    duplicates_skipped: int | None = None
+    duplicates_enriched: int | None = None
 
 
 class FolderImportResponse(BaseModel):
     documents_processed: int
     knowledge_items_created: int
     duplicates_skipped: int = 0
+    duplicates_enriched: int = 0
     failed_files: int
     results: list[FileImportResult] | None = None

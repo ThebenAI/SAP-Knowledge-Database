@@ -17,6 +17,9 @@ class PdfParser(DocumentParser):
             if not text:
                 continue
             raw_text_chunks.append(text)
+            snippet = " ".join(text.split())
+            if len(snippet) > 1200:
+                snippet = snippet[:1200]
             candidates.append(
                 CandidateItem(
                     item_type="page_text",
@@ -24,7 +27,12 @@ class PdfParser(DocumentParser):
                     content=text,
                     source_ref=build_fragment_ref(fragment_idx),
                     confidence=None,
-                    extracted_data={"fragment_kind": "pdf"},
+                    extracted_data={
+                        "fragment_kind": "pdf",
+                        "section_title": f"Page {fragment_idx}",
+                        "parent_section_titles": [],
+                        "nearby_text": snippet,
+                    },
                 )
             )
             fragment_idx += 1

@@ -2,7 +2,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.knowledge_item import KnowledgeItem, KnowledgeItemType
-from app.services.sap_module_service import suggest_sap_module_for_table
+from app.services.sap_module_inference_service import infer_sap_module_with_reason
 
 
 def _extract_table_name_for_inference(item: KnowledgeItem) -> str | None:
@@ -57,13 +57,28 @@ def backfill_sap_modules(db: Session) -> tuple[int, int, int, int]:
             continue
 
         table_name = _extract_table_name_for_inference(item)
-        module, source = suggest_sap_module_for_table(table_name, db=db, run_cache=run_lookup_cache)
+        extracted_data = item.extracted_data if isinstance(item.extracted_data, dict) else {}
+        module, source, module_confidence, module_reason = infer_sap_module_with_reason(
+            table_name,
+            item_type=item.item_type.value,
+            content=item.content,
+            extracted_data=extracted_data,
+            allow_web_lookup=True,
+            db=db,
+            run_cache=run_lookup_cache,
+        )
         if not module or not source:
             skipped_count += 1
             continue
 
         item.sap_module = module
         item.sap_module_source = source
+        if isinstance(item.extracted_data, dict):
+            updated_data = dict(item.extracted_data)
+            if module_reason:
+                updated_data["module_inference_reason"] = module_reason
+            updated_data["module_inference_confidence"] = module_confidence
+            item.extracted_data = updated_data
         db.add(item)
         updated_count += 1
         if source == "local":
