@@ -173,6 +173,7 @@ def _enhance_batch(
 def enhance_knowledge_items_with_llm(
     db: Session,
     items: list[KnowledgeItem],
+    api_key: str = "",
 ) -> None:
     """
     Enhance confidence scores of KnowledgeItems using the Claude API.
@@ -190,7 +191,8 @@ def enhance_knowledge_items_with_llm(
         return
 
     try:
-        client = anthropic.Anthropic()
+        # Pass api_key explicitly so an empty ANTHROPIC_API_KEY env var can't win
+        client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
     except Exception as exc:
         logger.warning("Could not initialize Anthropic client: %s", exc)
         return

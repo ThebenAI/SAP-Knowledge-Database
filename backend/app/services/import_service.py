@@ -156,11 +156,8 @@ def _run_llm_enhancement_if_enabled(db: Session, created_items: list) -> None:
         return
     if not created_items:
         return
-    import os
-    if settings.anthropic_api_key:
-        os.environ.setdefault("ANTHROPIC_API_KEY", settings.anthropic_api_key)
     from app.services.llm_service import enhance_knowledge_items_with_llm
-    enhance_knowledge_items_with_llm(db, created_items)
+    enhance_knowledge_items_with_llm(db, created_items, api_key=settings.anthropic_api_key)
 
 
 def _process_file_path(db: Session, file_path: str, file_type: str, imported_by: str | None) -> tuple[int, int, int]:

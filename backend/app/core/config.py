@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     use_llm_enhancement: bool = False
     anthropic_api_key: str = ""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_ignore_empty=True)
 
 
 @lru_cache
