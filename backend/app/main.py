@@ -1,3 +1,7 @@
+import logging
+import logging.handlers
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,6 +17,19 @@ from app.models.sap_module_lookup_cache import SapModuleLookupCache  # noqa: F40
 from app.models.user import User  # noqa: F401
 from app.core.database import engine
 from app.core.schema_upgrade import ensure_runtime_schema_compatibility
+
+def _configure_file_logging() -> None:
+    log_path = Path(__file__).resolve().parent.parent / "uvicorn.log"
+    handler = logging.handlers.RotatingFileHandler(
+        log_path, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
+    )
+    handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+    logging.getLogger().addHandler(handler)
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "app"):
+        logging.getLogger(name).addHandler(handler)
+
+
+_configure_file_logging()
 
 app = FastAPI(title="SAP Knowledge Tool API")
 
