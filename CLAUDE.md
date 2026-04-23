@@ -139,6 +139,8 @@ Frontend läuft unter: `http://localhost:5173`
 | `AUTH_SECRET_KEY` | `change-me-in-production` | JWT-Signing-Secret — in Prod unbedingt setzen |
 | `BOOTSTRAP_ADMIN_USERNAME` | `admin` | Initialer Admin-User |
 | `BOOTSTRAP_ADMIN_PASSWORD` | `admin123` | Initiales Admin-Passwort |
+| `USE_LLM_ENHANCEMENT` | `false` | LLM-Hybrid-Schritt aktivieren (`true`/`false`) |
+| `ANTHROPIC_API_KEY` | _(leer)_ | API-Key für Claude — erforderlich wenn `USE_LLM_ENHANCEMENT=true` |
 
 ---
 

@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     bootstrap_admin_username: str = "admin"
     bootstrap_admin_password: str = "admin123"
 
+    # LLM enhancement (optional hybrid step after rule-based extraction)
+    use_llm_enhancement: bool = False
+    anthropic_api_key: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

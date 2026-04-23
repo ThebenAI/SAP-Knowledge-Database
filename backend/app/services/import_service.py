@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.models.document import Document
 from app.parsers.factory import get_parser
 from app.services.extraction_service import create_knowledge_items_from_candidates
+from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -149,11 +150,25 @@ def import_folder(db: Session, folder_path: str, imported_by: str | None) -> tup
     return documents_processed, knowledge_items_created, duplicates_skipped, duplicates_enriched, failed_files
 
 
+def _run_llm_enhancement_if_enabled(db: Session, created_items: list) -> None:
+    settings = get_settings()
+    if not settings.use_llm_enhancement:
+        return
+    if not created_items:
+        return
+    import os
+    if settings.anthropic_api_key:
+        os.environ.setdefault("ANTHROPIC_API_KEY", settings.anthropic_api_key)
+    from app.services.llm_service import enhance_knowledge_items_with_llm
+    enhance_knowledge_items_with_llm(db, created_items)
+
+
 def _process_file_path(db: Session, file_path: str, file_type: str, imported_by: str | None) -> tuple[int, int, int]:
     parser = get_parser(file_type)
     parsed = parser.parse(file_path)
     document = _create_document_record(db, file_type=file_type, imported_by=imported_by)
     created, duplicates_skipped, duplicates_enriched = create_knowledge_items_from_candidates(db, document.id, parsed.candidates)
+    _run_llm_enhancement_if_enabled(db, created)
     return len(created), duplicates_skipped, duplicates_enriched
 
 
@@ -195,6 +210,7 @@ def _process_file_bytes(
     created, duplicates_skipped, duplicates_enriched = create_knowledge_items_from_candidates(
         db, document.id, parsed.candidates, debug_docx=debug_docx, stage_ctx=stage_ctx
     )
+    _run_llm_enhancement_if_enabled(db, created)
     return len(created), duplicates_skipped, duplicates_enriched
 
 
